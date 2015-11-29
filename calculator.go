@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"unicode"
 )
 
@@ -18,23 +17,20 @@ const (
 	RPAREN  = "right parenthesis"
 )
 
+// Lexer
+
 type Token struct {
 	tokenType  string
 	tokenValue string
 }
 
-func (self *Token) isOperator() bool {
-	operators := [4]string{PLUS, MINUS, MUL, DIV}
-	for _, operator := range operators {
-		if strings.EqualFold(operator, self.tokenType) {
-			return true
-		}
-	}
-
-	return false
+func isOperator(char byte) bool {
+	return char == '+' || char == '-' || char == '*' || char == '/'
 }
 
-// Lexer
+func isParenthesis(char byte) bool {
+	return char == '(' || char == ')'
+}
 
 type Lexer struct {
 	input string
@@ -70,14 +66,24 @@ func (self *Lexer) opToken() Token {
 	return token
 }
 
+func (self *Lexer) parenToken() Token {
+	var token Token
+
+	switch self.input[self.pos] {
+	case '(':
+		token = Token{LPAREN, "("}
+	case ')':
+		token = Token{RPAREN, ")"}
+	}
+
+	self.pos++
+	return token
+}
+
 func (self *Lexer) skipSpaces() {
 	for unicode.IsSpace(rune(self.input[self.pos])) {
 		self.pos++
 	}
-}
-
-func isOperator(char byte) bool {
-	return char == '+' || char == '-' || char == '*' || char == '/'
 }
 
 func (self *Lexer) nextToken() Token {
@@ -87,12 +93,8 @@ func (self *Lexer) nextToken() Token {
 		return self.intToken()
 	} else if isOperator(self.input[self.pos]) {
 		return self.opToken()
-	} else if self.input[self.pos] == '(' {
-		self.pos++
-		return Token{LPAREN, "("}
-	} else if self.input[self.pos] == ')' {
-		self.pos++
-		return Token{RPAREN, ")"}
+	} else if isParenthesis(self.input[self.pos]) {
+		return self.parenToken()
 	} else if unicode.IsSpace(rune(self.input[self.pos])) {
 		self.skipSpaces()
 		return self.nextToken()
@@ -140,7 +142,7 @@ func (self *Interpreter) factor() int {
 	}
 }
 
-func (self *Interpreter) muldiv() int {
+func (self *Interpreter) term() int {
 	result := self.factor()
 	tokenType := self.currentToken.tokenType
 
@@ -160,16 +162,16 @@ func (self *Interpreter) muldiv() int {
 }
 
 func (self *Interpreter) expr() int {
-	result := self.muldiv()
+	result := self.term()
 	tokenType := self.currentToken.tokenType
 
 	for tokenType == PLUS || tokenType == MINUS {
 		if tokenType == PLUS {
 			self.eat(PLUS)
-			result += self.muldiv()
+			result += self.term()
 		} else if tokenType == MINUS {
 			self.eat(MINUS)
-			result -= self.muldiv()
+			result -= self.term()
 		}
 
 		tokenType = self.currentToken.tokenType
