@@ -35,12 +35,12 @@ func (self *interpreter) integer() int {
 	return num
 }
 
-func (self *interpreter) Factor() int {
+func (self *interpreter) factor() int {
 	if self.currentToken.tokenType == INTEGER {
 		return self.integer()
 	} else if self.currentToken.tokenType == LPAREN {
 		self.eat(LPAREN)
-		result := self.Expr()
+		result := self.expr()
 		self.eat(RPAREN)
 		return result
 	} else {
@@ -48,17 +48,17 @@ func (self *interpreter) Factor() int {
 	}
 }
 
-func (self *interpreter) Term() int {
-	result := self.Factor()
+func (self *interpreter) term() int {
+	result := self.factor()
 	tokenType := self.currentToken.tokenType
 
 	for tokenType == MUL || tokenType == DIV {
 		if tokenType == MUL {
 			self.eat(MUL)
-			result *= self.Factor()
+			result *= self.factor()
 		} else if tokenType == DIV {
 			self.eat(DIV)
-			result /= self.Factor()
+			result /= self.factor()
 		}
 
 		tokenType = self.currentToken.tokenType
@@ -67,17 +67,17 @@ func (self *interpreter) Term() int {
 	return result
 }
 
-func (self *interpreter) Expr() int {
-	result := self.Term()
+func (self *interpreter) expr() int {
+	result := self.term()
 	tokenType := self.currentToken.tokenType
 
 	for tokenType == PLUS || tokenType == MINUS {
 		if tokenType == PLUS {
 			self.eat(PLUS)
-			result += self.Term()
+			result += self.term()
 		} else if tokenType == MINUS {
 			self.eat(MINUS)
-			result -= self.Term()
+			result -= self.term()
 		}
 
 		tokenType = self.currentToken.tokenType
@@ -95,7 +95,7 @@ func (self *interpreter) Result() (result int, err error) {
 	}()
 
 	self.currentToken = self.lexer.nextToken()
-	result = self.Expr()
+	result = self.expr()
 	err = nil
 	return result, err
 }
