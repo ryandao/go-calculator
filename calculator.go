@@ -61,7 +61,7 @@ func (self *Lexer) opToken() Token {
 	case '*':
 		token = Token{MUL, "*"}
 	case '/':
-		token = Token{DIV, "*"}
+		token = Token{DIV, "/"}
 	default:
 		panic("Invalid operator")
 	}
@@ -171,28 +171,21 @@ func (self *Interpreter) muldiv() int {
 
 func (self *Interpreter) expr() int {
 	result := self.muldiv()
+	tokenType := self.currentToken.tokenType
 
-	for self.currentToken.tokenType != EOF && self.currentToken.tokenType != RPAREN {
-		operator := self.operator()
-		result = binaryCalc(result, self.muldiv(), operator)
+	for tokenType == PLUS || tokenType == MINUS {
+		if tokenType == PLUS {
+			self.eat(PLUS)
+			result += self.muldiv()
+		} else if tokenType == MINUS {
+			self.eat(MINUS)
+			result -= self.muldiv()
+		}
+
+		tokenType = self.currentToken.tokenType
 	}
 
 	return result
-}
-
-func binaryCalc(num1 int, num2 int, operator string) int {
-	switch operator {
-	case PLUS:
-		return num1 + num2
-	case MINUS:
-		return num1 - num2
-	case MUL:
-		return num1 * num2
-	case DIV:
-		return num1 / num2
-	default:
-		panic("Invalid operator")
-	}
 }
 
 func main() {
