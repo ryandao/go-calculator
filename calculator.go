@@ -14,8 +14,8 @@ const (
 	MUL     = "mul"
 	DIV     = "div"
 	EOF     = "eof"
-	LPAREN  = "("
-	RPAREN  = ")"
+	LPAREN  = "left parenthesis"
+	RPAREN  = "right parenthesis"
 )
 
 type Token struct {
@@ -125,16 +125,6 @@ func (self *Interpreter) integer() int {
 		panic("Not a valid integer")
 	}
 	return num
-}
-
-func (self *Interpreter) operator() string {
-	if self.currentToken.isOperator() {
-		operator := self.currentToken.tokenType
-		self.eat(operator)
-		return operator
-	}
-
-	panic("Expect operator")
 }
 
 func (self *Interpreter) factor() int {
