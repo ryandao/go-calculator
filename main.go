@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/ryandao/calculator/lib"
+	"github.com/ryandao/go-calculator/lib"
 	"os"
 )
 
@@ -14,6 +14,12 @@ func main() {
 		input, _ := reader.ReadString('\n')
 		lexer := lib.Lexer(input)
 		interpreter := lib.Interpreter(&lexer)
-		fmt.Printf("%d\n", interpreter.Expr())
+		result, err := interpreter.Result()
+
+		if err == nil {
+			fmt.Printf("%d\n", result)
+		} else {
+			fmt.Printf("%s\n", err)
+		}
 	}
 }

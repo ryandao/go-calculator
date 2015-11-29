@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"unicode"
 )
 
@@ -69,7 +70,7 @@ func (self *lexer) opToken() Token {
 	case '/':
 		token = Token{DIV, "/"}
 	default:
-		panic("Invalid operator")
+		panic(fmt.Sprintf("Invalid operator '%c'", self.currentChar))
 	}
 
 	self.advance()
@@ -109,6 +110,6 @@ func (self *lexer) nextToken() Token {
 		self.skipSpaces()
 		return self.nextToken()
 	} else {
-		panic("Not recognized input")
+		panic(fmt.Sprintf("Invalid token '%c'", self.currentChar))
 	}
 }

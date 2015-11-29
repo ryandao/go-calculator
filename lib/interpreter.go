@@ -1,12 +1,13 @@
 package lib
 
 import (
+	"errors"
+	"fmt"
 	"strconv"
 )
 
 func Interpreter(lexer *lexer) interpreter {
 	self := interpreter{lexer: lexer}
-	self.currentToken = lexer.nextToken()
 	return self
 }
 
@@ -19,7 +20,7 @@ func (self *interpreter) eat(tokenType string) {
 	if self.currentToken.tokenType == tokenType {
 		self.currentToken = self.lexer.nextToken()
 	} else {
-		panic("Token type not matched")
+		panic(fmt.Sprintf("Token '%v' does not match expected type '%s'", self.currentToken, tokenType))
 	}
 }
 
@@ -29,7 +30,7 @@ func (self *interpreter) integer() int {
 	num, err := strconv.Atoi(token.tokenValue)
 
 	if err != nil {
-		panic("Not a valid integer")
+		panic(fmt.Sprintf("'%s' is not a valid integer", token.tokenValue))
 	}
 	return num
 }
@@ -43,7 +44,7 @@ func (self *interpreter) Factor() int {
 		self.eat(RPAREN)
 		return result
 	} else {
-		panic("Invalid token")
+		panic(fmt.Sprintf("Unexpected token '%v'", self.currentToken))
 	}
 }
 
@@ -83,4 +84,18 @@ func (self *interpreter) Expr() int {
 	}
 
 	return result
+}
+
+func (self *interpreter) Result() (result int, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			result = 0
+			err = errors.New(e.(string))
+		}
+	}()
+
+	self.currentToken = self.lexer.nextToken()
+	result = self.Expr()
+	err = nil
+	return result, err
 }
