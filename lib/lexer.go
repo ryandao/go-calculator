@@ -81,7 +81,7 @@ func (self *lexer) parenToken() Token {
 }
 
 func (self *lexer) skipSpaces() {
-	for unicode.IsSpace(rune(self.input[self.pos])) {
+	for self.pos < len(self.input) && unicode.IsSpace(rune(self.input[self.pos])) {
 		self.pos++
 	}
 }
