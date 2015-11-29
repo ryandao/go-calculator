@@ -29,19 +29,29 @@ type Token struct {
 }
 
 func Lexer(input string) lexer {
-	return lexer{input, 0}
+	return lexer{input, 0, input[0]}
 }
 
 type lexer struct {
-	input string
-	pos   int
+	input       string
+	pos         int
+	currentChar byte
+}
+
+func (self *lexer) advance() {
+	self.pos++
+	if self.pos < len(self.input) {
+		self.currentChar = self.input[self.pos]
+	} else {
+		self.currentChar = '\x00'
+	}
 }
 
 func (self *lexer) intToken() Token {
 	str := ""
-	for self.pos < len(self.input) && unicode.IsDigit(rune(self.input[self.pos])) {
+	for self.pos < len(self.input) && unicode.IsDigit(rune(self.currentChar)) {
 		str += self.input[self.pos : self.pos+1]
-		self.pos++
+		self.advance()
 	}
 	return Token{INTEGER, str}
 }
@@ -49,7 +59,7 @@ func (self *lexer) intToken() Token {
 func (self *lexer) opToken() Token {
 	var token Token
 
-	switch self.input[self.pos] {
+	switch self.currentChar {
 	case '+':
 		token = Token{PLUS, "+"}
 	case '-':
@@ -62,40 +72,40 @@ func (self *lexer) opToken() Token {
 		panic("Invalid operator")
 	}
 
-	self.pos++
+	self.advance()
 	return token
 }
 
 func (self *lexer) parenToken() Token {
 	var token Token
 
-	switch self.input[self.pos] {
+	switch self.currentChar {
 	case '(':
 		token = Token{LPAREN, "("}
 	case ')':
 		token = Token{RPAREN, ")"}
 	}
 
-	self.pos++
+	self.advance()
 	return token
 }
 
 func (self *lexer) skipSpaces() {
-	for self.pos < len(self.input) && unicode.IsSpace(rune(self.input[self.pos])) {
-		self.pos++
+	for self.pos < len(self.input) && unicode.IsSpace(rune(self.currentChar)) {
+		self.advance()
 	}
 }
 
 func (self *lexer) nextToken() Token {
 	if self.pos >= len(self.input) {
 		return Token{tokenType: EOF}
-	} else if unicode.IsDigit(rune(self.input[self.pos])) {
+	} else if unicode.IsDigit(rune(self.currentChar)) {
 		return self.intToken()
-	} else if isOperator(self.input[self.pos]) {
+	} else if isOperator(self.currentChar) {
 		return self.opToken()
-	} else if isParenthesis(self.input[self.pos]) {
+	} else if isParenthesis(self.currentChar) {
 		return self.parenToken()
-	} else if unicode.IsSpace(rune(self.input[self.pos])) {
+	} else if unicode.IsSpace(rune(self.currentChar)) {
 		self.skipSpaces()
 		return self.nextToken()
 	} else {
