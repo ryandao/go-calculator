@@ -14,6 +14,8 @@ const (
 	MUL     = "mul"
 	DIV     = "div"
 	EOF     = "eof"
+	LPAREN  = "("
+	RPAREN  = ")"
 )
 
 type Token struct {
@@ -85,6 +87,12 @@ func (self *Lexer) nextToken() Token {
 		return self.intToken()
 	} else if isOperator(self.input[self.pos]) {
 		return self.opToken()
+	} else if self.input[self.pos] == '(' {
+		self.pos++
+		return Token{LPAREN, "("}
+	} else if self.input[self.pos] == ')' {
+		self.pos++
+		return Token{RPAREN, ")"}
 	} else if unicode.IsSpace(rune(self.input[self.pos])) {
 		self.skipSpaces()
 		return self.nextToken()
@@ -97,7 +105,7 @@ func (self *Lexer) nextToken() Token {
 
 type Interpreter struct {
 	currentToken Token
-	lexer        Lexer
+	lexer        *Lexer
 }
 
 func (self *Interpreter) eat(tokenType string) {
@@ -129,19 +137,44 @@ func (self *Interpreter) operator() string {
 	panic("Expect operator")
 }
 
+func (self *Interpreter) factor() int {
+	if self.currentToken.tokenType == INTEGER {
+		return self.integer()
+	} else if self.currentToken.tokenType == LPAREN {
+		self.eat(LPAREN)
+		result := self.expr()
+		self.eat(RPAREN)
+		return result
+	} else {
+		panic("Invalid token")
+	}
+}
+
 func (self *Interpreter) muldiv() int {
-	result := self.integer()
+	result := self.factor()
+	tokenType := self.currentToken.tokenType
 
-	for self.currentToken.tokenType != EOF &&
-		self.currentToken.tokenType != PLUS &&
-		self.currentToken.tokenType != MINUS {
-
-		operator := self.operator()
-		if operator == MUL {
-			result *= self.integer()
-		} else if operator == DIV {
-			result /= self.integer()
+	for tokenType == MUL || tokenType == DIV {
+		if tokenType == MUL {
+			self.eat(MUL)
+			result *= self.factor()
+		} else if tokenType == DIV {
+			self.eat(DIV)
+			result /= self.factor()
 		}
+
+		tokenType = self.currentToken.tokenType
+	}
+
+	return result
+}
+
+func (self *Interpreter) expr() int {
+	result := self.muldiv()
+
+	for self.currentToken.tokenType != EOF && self.currentToken.tokenType != RPAREN {
+		operator := self.operator()
+		result = binaryCalc(result, self.muldiv(), operator)
 	}
 
 	return result
@@ -162,20 +195,9 @@ func binaryCalc(num1 int, num2 int, operator string) int {
 	}
 }
 
-func (self *Interpreter) expr() string {
-	self.currentToken = self.lexer.nextToken()
-	result := self.muldiv()
-
-	for self.currentToken.tokenType != EOF {
-		operator := self.operator()
-		result = binaryCalc(result, self.muldiv(), operator)
-	}
-
-	return strconv.Itoa(result)
-}
-
 func main() {
-	lexer := Lexer{"2 * 2  + 10 *3/3 + 1", 0}
-	interpreter := Interpreter{lexer: lexer}
-	fmt.Printf(interpreter.expr() + "\n")
+	lexer := Lexer{"2 * (2  + 10) *3/3 + 1", 0}
+	interpreter := Interpreter{lexer: &lexer}
+	interpreter.currentToken = lexer.nextToken()
+	fmt.Printf("%d\n", interpreter.expr())
 }
