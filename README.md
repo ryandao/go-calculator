@@ -12,3 +12,20 @@ Running the interactive calculator:
     ./go-calculator
 
 or just do `go run main.go`.
+
+Some example calculations:
+
+    > 1+2
+    3
+    > (12 + 1) / (1 + 2)
+    4.333333333
+    > 3 + 2*4/8
+    4
+    > (1 - (3 + 2) * 42) / 5
+    -41.8
+    > 1a + 1
+    Invalid token 'a'
+    > 1 +
+    Unexpected token '{eof }'
+    > ((1-3 * 2)
+    Token '{eof }' does not match expected type 'right parenthesis'
