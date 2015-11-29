@@ -9,6 +9,6 @@ An implementation of an arithmetic calculator in Golang. This implementation fol
 Running the interactive calculator:
 
     go build
-    ./calculator
+    ./go-calculator
 
 or just do `go run main.go`.
