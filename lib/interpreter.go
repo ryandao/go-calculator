@@ -16,6 +16,8 @@ type interpreter struct {
 	lexer        *lexer
 }
 
+// Check the current token for a given token type
+// and advance if the token matches.
 func (self *interpreter) eat(tokenType string) {
 	if self.currentToken.tokenType == tokenType {
 		self.currentToken = self.lexer.nextToken()
@@ -24,10 +26,11 @@ func (self *interpreter) eat(tokenType string) {
 	}
 }
 
-func (self *interpreter) integer() int {
+// Return an integer from the current token
+func (self *interpreter) number() float64 {
 	token := self.currentToken
 	self.eat(INTEGER)
-	num, err := strconv.Atoi(token.tokenValue)
+	num, err := strconv.ParseFloat(token.tokenValue, 64)
 
 	if err != nil {
 		panic(fmt.Sprintf("'%s' is not a valid integer", token.tokenValue))
@@ -35,9 +38,10 @@ func (self *interpreter) integer() int {
 	return num
 }
 
-func (self *interpreter) factor() int {
+// Parse the `factor` production in the grammar
+func (self *interpreter) factor() float64 {
 	if self.currentToken.tokenType == INTEGER {
-		return self.integer()
+		return self.number()
 	} else if self.currentToken.tokenType == LPAREN {
 		self.eat(LPAREN)
 		result := self.expr()
@@ -48,7 +52,8 @@ func (self *interpreter) factor() int {
 	}
 }
 
-func (self *interpreter) term() int {
+// Parse the `term` production in the grammar
+func (self *interpreter) term() float64 {
 	result := self.factor()
 	tokenType := self.currentToken.tokenType
 
@@ -67,7 +72,8 @@ func (self *interpreter) term() int {
 	return result
 }
 
-func (self *interpreter) expr() int {
+// Parse the `expr` production in the grammar
+func (self *interpreter) expr() float64 {
 	result := self.term()
 	tokenType := self.currentToken.tokenType
 
@@ -86,7 +92,8 @@ func (self *interpreter) expr() int {
 	return result
 }
 
-func (self *interpreter) Result() (result int, err error) {
+// Wraps the `expr()` method to add more friendly error handling
+func (self *interpreter) Result() (result float64, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			result = 0
