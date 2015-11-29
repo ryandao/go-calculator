@@ -1,12 +1,19 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/ryandao/calculator/lib"
+	"os"
 )
 
 func main() {
-	lexer := lib.Lexer("2 * (2  + 10) *3/3 + 1")
-	interpreter := lib.Interpreter(&lexer)
-	fmt.Printf("%d\n", interpreter.Expr())
+	for true {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("> ")
+		input, _ := reader.ReadString('\n')
+		lexer := lib.Lexer(input)
+		interpreter := lib.Interpreter(&lexer)
+		fmt.Printf("%d\n", interpreter.Expr())
+	}
 }
